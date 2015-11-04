@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module external.linked.project.id="Android" external.linked.project.path="$MODULE_DIR$" external.root.project.path="$MODULE_DIR$" external.system.id="GRADLE" external.system.module.group="" external.system.module.version="unspecified" type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="android" name="Android">
+      <configuration>
+        <option name="MANIFEST_FILE_RELATIVE_PATH" value="/FreePIE Android IMU/AndroidManifest.xml" />
+        <option name="RES_FOLDER_RELATIVE_PATH" value="/FreePIE Android IMU/res" />
+        <option name="ASSETS_FOLDER_RELATIVE_PATH" value="/FreePIE Android IMU/assets" />
+        <option name="LIBS_FOLDER_RELATIVE_PATH" value="/FreePIE Android IMU/libs" />
+        <option name="APK_PATH" value="/build/freepie-udp.apk" />
+        <option name="PACK_TEST_CODE" value="true" />
+        <option name="UPDATE_PROPERTY_FILES" value="false" />
+        <option name="ENABLE_MANIFEST_MERGING" value="true" />
+        <option name="ENABLE_SOURCES_AUTOGENERATION" value="false" />
+        <includeAssetsFromLibraries>true</includeAssetsFromLibraries>
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <output url="file://$MODULE_DIR$/build" />
+    <output-test url="file://$MODULE_DIR$/build" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/FreePIE Android IMU">
+      <sourceFolder url="file://$MODULE_DIR$/FreePIE Android IMU/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/FreePIE Android IMU/res" type="java-resource" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="v4" level="project" />
+  </component>
+</module>

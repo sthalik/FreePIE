@@ -1,0 +1,17 @@
+<component name="ArtifactManager">
+  <artifact type="apk" build-on-make="true" name="freepie-udp">
+    <output-path>$PROJECT_DIR$/build/classes/artifacts/freepie_udp</output-path>
+    <properties id="android-properties">
+      <options>
+        <option name="keyAlias" value="abc" />
+        <option name="keyPassword" value="ZHVwYS44" />
+        <option name="keyStorePassword" value="ZHVwYS44" />
+        <option name="keyStoreUrl" value="file://$USER_HOME$/.android-key-abc" />
+        <option name="signingMode" value="RELEASE_SIGNED" />
+      </options>
+    </properties>
+    <root id="archive" name="freepie-udp.apk">
+      <element id="android-final-package" facet="freepie-udp/android/Android" />
+    </root>
+  </artifact>
+</component>

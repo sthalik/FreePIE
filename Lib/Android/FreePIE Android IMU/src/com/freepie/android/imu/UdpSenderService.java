@@ -47,6 +47,8 @@ public class UdpSenderService extends Service implements SensorEventListener {
     float[] R_ = new float[] {0,0,0, 0,0,0, 0,0,0};
     float[] I = new float[] {0,0,0, 0,0,0, 0,0,0};
 
+    private MagAccEstimator.result no_gyro_result;
+
     DatagramSocket socket;
     byte deviceIndex;
     boolean sendOrientation;
@@ -103,6 +105,11 @@ public class UdpSenderService extends Service implements SensorEventListener {
                 }
             }
         }
+
+        if (hasGyro)
+            no_gyro_result = null;
+        else
+            no_gyro_result = new MagAccEstimator.result();
     }
 
     public String getLastError() {
@@ -325,6 +332,14 @@ public class UdpSenderService extends Service implements SensorEventListener {
         return running;
     }
 
+    private short clamp(float datum, float max)
+    {
+        float tmp = datum / max;
+        if (Math.abs(tmp) > 1.)
+            tmp = 1.f * (tmp < 0.f ? -1.f : 1.f);
+        return (short) (tmp * 32767);
+    }
+
     public void onSensorChanged(SensorEvent sensorEvent) {
         synchronized (this) {
             switch (sensorEvent.sensor.getType()) {
@@ -344,8 +359,13 @@ public class UdpSenderService extends Service implements SensorEventListener {
 
             if (sendOrientation) {
                 if (!hasGyro) {
-                    boolean ignored = SensorManager.getRotationMatrix(R_, I, acc, mag);
-                    SensorManager.getOrientation(R_, imu);
+                    MagAccEstimator.iecompass(no_gyro_result,
+                            clamp(mag[0], 65), clamp(mag[1], 65), clamp(mag[2], 65),
+                            clamp(acc[0], 25), clamp(acc[1], 25), clamp(acc[2], 25));
+                    final float mult = 3.14159265359f / 180.f / 100.f;
+                    imu[0] = no_gyro_result.iPhi * mult;
+                    imu[1] = no_gyro_result.iTheta * mult;
+                    imu[2] = no_gyro_result.iPsi * mult;
                 } else {
                     SensorManager.getRotationMatrixFromVector(rotationMatrix, rotationVector);
                     SensorManager.getOrientation(rotationMatrix, imu);

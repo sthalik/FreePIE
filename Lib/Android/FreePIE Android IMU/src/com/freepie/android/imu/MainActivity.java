@@ -209,12 +209,11 @@ public class MainActivity extends Activity {
 
     private void populateSampleRates(int defaultSampleRate) {
         // delay information from http://developer.android.com/guide/topics/sensors/sensors_overview.html#sensors-monitor
-        List<SampleRate> sampleRates = Arrays.asList(new SampleRate[]{
+        List<SampleRate> sampleRates = Arrays.asList(
                 new SampleRate(SensorManager.SENSOR_DELAY_NORMAL, "Slowest - 5 FPS"),
                 new SampleRate(SensorManager.SENSOR_DELAY_UI, "Average - 16 FPS"),
                 new SampleRate(SensorManager.SENSOR_DELAY_GAME, "Fast - 50 FPS"),
-                new SampleRate(SensorManager.SENSOR_DELAY_FASTEST, "Fastest - no delay")
-        });
+                new SampleRate(SensorManager.SENSOR_DELAY_FASTEST, "Fastest - no delay"));
 
         SampleRate selectedSampleRate = null;
         for (SampleRate sampleRate : sampleRates) {
@@ -262,7 +261,7 @@ public class MainActivity extends Activity {
                 .putBoolean(SEND_ORIENTATION, chkSendOrientation.isChecked())
                 .putBoolean(SEND_RAW, chkSendRaw.isChecked())
                 .putInt(SAMPLE_RATE, getSelectedSampleRateId())
-                .commit();
+                .apply();
     }
 
     @Override

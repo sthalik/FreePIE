@@ -7,7 +7,7 @@
         <option name="RES_FOLDER_RELATIVE_PATH" value="/FreePIE Android IMU/res" />
         <option name="ASSETS_FOLDER_RELATIVE_PATH" value="/FreePIE Android IMU/assets" />
         <option name="LIBS_FOLDER_RELATIVE_PATH" value="/FreePIE Android IMU/libs" />
-        <option name="APK_PATH" value="/build/freepie-udp.apk" />
+        <option name="APK_PATH" value="/freepie-udp.apk" />
         <option name="PACK_TEST_CODE" value="true" />
         <option name="UPDATE_PROPERTY_FILES" value="false" />
         <option name="ENABLE_MANIFEST_MERGING" value="true" />

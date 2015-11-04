@@ -8,14 +8,15 @@ package com.freepie.android.imu;// this code is based on the document:
 
 // a copy is located at http://cache.freescale.com/files/sensors/doc/app_note/AN4248.pdf
 
-public class MagAccEstimator
-{
-    private MagAccEstimator() {}
+public class MagAccEstimator {
+    private MagAccEstimator() {
+    }
 
-    public static class result
-    {
-        public short iPhi, iTheta, iPsi;
+    public static class result {
+        public short angles[] = new short[3];
         public short iBfx, iBfy, iBfz;
+        public short filt_acc[] = new short[3];
+        public short filt_mag[] = new short[3];
     }
 
     // note java has no unsigned integers
@@ -80,9 +81,9 @@ public class MagAccEstimator
         if ((ix >= 0) && (iy >= 0)) /* range 0 to 90 degrees */
             iResult = iHundredAtanDeg(iy, ix);
         else if ((ix <= 0) && (iy >= 0)) /* range 90 to 180 degrees */
-            iResult = (short) (18000 - (short) iHundredAtanDeg(iy, (short) - ix));
+            iResult = (short) (18000 - (short) iHundredAtanDeg(iy, (short) -ix));
         else if ((ix <= 0) && (iy <= 0)) /* range -180 to -90 degrees */
-            iResult = (short) ((short) -18000 + iHundredAtanDeg((short) - iy, (short) - ix));
+            iResult = (short) ((short) -18000 + iHundredAtanDeg((short) -iy, (short) -ix));
         else /* ix >=0 and iy <= 0 giving range -90 to 0 degrees */
             iResult = (short) (-iHundredAtanDeg((short) -iy, ix));
         return iResult;
@@ -92,9 +93,9 @@ public class MagAccEstimator
     static final short K1 = 5701;
     static final short K2 = -1645;
     static final short K3 = 446;
+
     /* calculates 100*atan(iy/ix) range 0 to 9000 for all ix, iy positive in range 0 to 32767 */
-    static short iHundredAtanDeg(short iy, short ix)
-    {
+    static short iHundredAtanDeg(short iy, short ix) {
         int iAngle; /* angle in degrees times 100 */
         short iRatio; /* ratio of iy / ix or vice versa */
         int iTmp; /* temporary variable */
@@ -114,7 +115,7 @@ public class MagAccEstimator
         iAngle += (iTmp >> 15) * (int) K3;
         iAngle = iAngle >> 15;
 /* check if above 45 degrees */
-        if (iy > ix) iAngle = (short)(9000 - iAngle);
+        if (iy > ix) iAngle = (short) (9000 - iAngle);
 /* for tidiness, limit result to range 0 to 9000 equals 0.0 to 90.0 degrees */
         if (iAngle < 0) iAngle = 0;
         if (iAngle > 9000) iAngle = 9000;
@@ -122,6 +123,7 @@ public class MagAccEstimator
     }
 
     static final short MINDELTADIV = 1; /* final step size for iDivide */
+
     /* function to calculate ir = iy / ix with iy <= ix, and ix, iy both > 0 */
     static short iDivide(short iy, short ix) {
         short itmp; /* scratch */
@@ -155,7 +157,7 @@ public class MagAccEstimator
 /* local variables */
         short iSin, iCos; /* sine and cosine */
         /* calculate current roll angle Phi */
-        res.iPhi = iHundredAtan2Deg(iGpy, iGpz);/* Eq 13 */
+        res.angles[0] = iHundredAtan2Deg(iGpy, iGpz);/* Eq 13 */
 /* calculate sin and cosine of roll angle Phi */
         iSin = iTrig(iGpy, iGpz); /* Eq 13: sin = opposite / hypotenuse */
         iCos = iTrig(iGpz, iGpy); /* Eq 13: cos = adjacent / hypotenuse */
@@ -164,10 +166,10 @@ public class MagAccEstimator
         iBpz = (short) ((iBpy * iSin + iBpz * iCos) >> 15);/* Bpy*sin(Phi)+Bpz*cos(Phi)*/
         iGpz = (short) ((iGpy * iSin + iGpz * iCos) >> 15);/* Eq 15 denominator */
 /* calculate current pitch angle Theta */
-        res.iTheta = iHundredAtan2Deg((short) -iGpx, iGpz);/* Eq 15 */
+        res.angles[1] = iHundredAtan2Deg((short) -iGpx, iGpz);/* Eq 15 */
 /* restrict pitch angle to range -90 to 90 degrees */
-        if (res.iTheta > 9000) res.iTheta = (short) (18000 - res.iTheta);
-        if (res.iTheta < -9000) res.iTheta = (short) (-18000 - res.iTheta);
+        if (res.angles[1] > 9000) res.angles[1] = (short) (18000 - res.angles[1]);
+        if (res.angles[1] < -9000) res.angles[1] = (short) (-18000 - res.angles[1]);
 /* calculate sin and cosine of pitch angle Theta */
         iSin = (short) -iTrig(iGpx, iGpz); /* Eq 15: sin = opposite / hypotenuse */
         iCos = iTrig(iGpz, iGpx); /* Eq 15: cos = adjacent / hypotenuse */
@@ -177,6 +179,23 @@ public class MagAccEstimator
         res.iBfx = (short) ((iBpx * iCos + iBpz * iSin) >> 15); /* Eq 19: x component */
         res.iBfz = (short) ((-iBpx * iSin + iBpz * iCos) >> 15);/* Eq 19: z component */
 /* calculate current yaw = e-compass angle Psi */
-        res.iPsi = iHundredAtan2Deg((short) -res.iBfy, res.iBfx); /* Eq 22 */
+        res.angles[2] = iHundredAtan2Deg((short) -res.iBfy, res.iBfx); /* Eq 22 */
+    }
+
+    public static short lowpass(short filtered, short new_sample, int nsamples) {
+        int tmpAngle; /* temporary angle*100 deg: range -36000 to 36000 */
+        final short ANGLE_LPF = (short) (32768 / nsamples); /* low pass filter: set to 32768 / N for N samples averaging */
+/* implement a modulo arithmetic exponential low pass filter on the yaw angle */
+/* compute the change in angle modulo 360 degrees */
+        tmpAngle = (int) new_sample - (int) filtered;
+        if (tmpAngle > 18000) tmpAngle -= 36000;
+        if (tmpAngle < -18000) tmpAngle += 36000;
+/* calculate the new low pass filtered angle */
+        tmpAngle = (int) filtered + ((ANGLE_LPF * tmpAngle) >> 15);
+/* check that the angle remains in -180 to 180 deg bounds */
+        if (tmpAngle > 18000) tmpAngle -= 36000;
+        if (tmpAngle < -18000) tmpAngle += 36000;
+/* store the correctly bounded low pass filtered angle */
+        return (short) tmpAngle;
     }
 }

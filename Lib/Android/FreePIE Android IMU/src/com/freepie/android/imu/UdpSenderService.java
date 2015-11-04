@@ -17,14 +17,11 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 public class UdpSenderService extends Service implements SensorEventListener {
     private final IBinder mBinder = new MyBinder();
@@ -43,9 +40,6 @@ public class UdpSenderService extends Service implements SensorEventListener {
 
     float[] rotationVector = new float[3];
     final float[] rotationMatrix = new float[16];
-
-    float[] R_ = new float[] {0,0,0, 0,0,0, 0,0,0};
-    float[] I = new float[] {0,0,0, 0,0,0, 0,0,0};
 
     private MagAccEstimator.result no_gyro_result;
 
@@ -189,7 +183,7 @@ public class UdpSenderService extends Service implements SensorEventListener {
         if (worker != null) {
             try {
                 worker.join();
-            } catch (InterruptedException e) {
+            } catch (InterruptedException ignored) {
             }
         }
     }
@@ -359,13 +353,47 @@ public class UdpSenderService extends Service implements SensorEventListener {
 
             if (sendOrientation) {
                 if (!hasGyro) {
+                    final int max_acc = 25;
+                    final int max_mag = 65; // earth's magnetic field doesn't get higher than that
+                    //{
+                    //    boolean first_sample = true;
+                    //    for (int i = 0; i < 3; i++) {
+                    //        if (no_gyro_result.filt_acc[i] != 0) {
+                    //            first_sample = false;
+                    //            break;
+                    //        }
+                    //    }
+                    //    if (first_sample) {
+                    //        for (int i = 0; i < 3; i++) {
+                    //            no_gyro_result.filt_acc[i] = clamp(acc[i], max_acc);
+                    //            //no_gyro_result.filt_mag[i] = clamp(mag[i], max_mag);
+                    //        }
+                    //    }
+                    //}
+                    for (int i = 0; i < 3; i++) {
+                        //no_gyro_result.filt_acc[i] = MagAccEstimator.lowpass(
+                        //        no_gyro_result.filt_acc[i],
+                        //        clamp(acc[i], max_acc),
+                        //        10);
+                        //no_gyro_result.filt_mag[i] = MagAccEstimator.lowpass(
+                        //        no_gyro_result.filt_mag[i],
+                        //        clamp(mag[i], max_mag),
+                        //        5
+                        //);
+                        no_gyro_result.filt_mag[i] = clamp(mag[i], max_mag);
+                        no_gyro_result.filt_acc[i] = clamp(acc[i], max_acc);
+                    }
                     MagAccEstimator.iecompass(no_gyro_result,
-                            clamp(mag[0], 65), clamp(mag[1], 65), clamp(mag[2], 65),
-                            clamp(acc[0], 25), clamp(acc[1], 25), clamp(acc[2], 25));
+                            no_gyro_result.filt_mag[0],
+                            no_gyro_result.filt_mag[1],
+                            no_gyro_result.filt_mag[2],
+                            no_gyro_result.filt_acc[0],
+                            no_gyro_result.filt_acc[1],
+                            no_gyro_result.filt_acc[2]);
                     final float mult = 3.14159265359f / 180.f / 100.f;
-                    imu[0] = no_gyro_result.iPhi * mult;
-                    imu[1] = no_gyro_result.iTheta * mult;
-                    imu[2] = no_gyro_result.iPsi * mult;
+                    imu[0] = no_gyro_result.angles[0] * mult;
+                    imu[1] = no_gyro_result.angles[1] * mult;
+                    imu[2] = no_gyro_result.angles[2] * mult;
                 } else {
                     SensorManager.getRotationMatrixFromVector(rotationMatrix, rotationVector);
                     SensorManager.getOrientation(rotationMatrix, imu);
